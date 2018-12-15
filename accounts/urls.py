@@ -6,7 +6,10 @@ urlpatterns = [
     url('^logout/$', views.UserLogoutView.as_view(), name='logout'),
     url('^product/$', views.ProductComplaintView, name='product-view'),
     url('^subproduct/$', views.SubProductComplaint),
+    url('^CompanyDispute/$', views.CompanyDispute),
+    url('^ProductDispute/$', views.Demographic)
 ]
+
 
 
 
