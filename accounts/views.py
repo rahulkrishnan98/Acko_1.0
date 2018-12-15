@@ -56,7 +56,47 @@ class UserLogoutView(LogoutView):
     def post(self, request, format=None):
         super(UserLogoutView, self).post(request, format=None)
         return Response({'message': 'successfully logged out!', 'error': 0})
+   
+def ProductComplaintView(request):
+    filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
+    with open(filename, "r") as csv_file:
+        reader = csv.reader(csv_file)
+        products=[]
+        for row in reader:
+            products.append(row[1])
+        plot1={}
+        for product in products:
+            if(product in plot1):
+                plot1[product]+=1
+            else:
+                plot1[product]=1
+        json1 = json.dumps(plot1)
+        json2 = json.loads(json1)
+        plt.bar(range(len(plot1)), list(plot1.values()), align='center')
+        plt.xticks(range(len(plot1)), list(plot1.keys()),fontsize=7, rotation=30)
+        plt.title('Complaint count over Registered products')
+        plt.savefig("1.Product_Count.png")
+        return JsonResponse({'message': json2})
 
+
+def SubProductComplaint(request):
+    product = 'Mortgage'
+    filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
+    with open(filename, "r") as csv_file:
+        reader = csv.reader(csv_file)
+        sub_products = {}
+        for row in reader:
+            if row[1] == product:
+                if row[2] in sub_products:
+                    sub_products[row[2]] += 1
+                else:
+                    sub_products[row[2]] = 1
+        json_values = json.loads(json.dumps(sub_products))
+        plt.bar(range(len(sub_products)), list(sub_products.values()), align='center')
+        plt.xticks(range(len(sub_products)), list(sub_products.keys()), fontsize=7, rotation=30)
+        plt.title('Complaint count over Registered Sub_products for %s' %(product))
+        plt.savefig("Sub_Product_Count.png")
+        return JsonResponse(json_values)
 
 #'date_received
 # 'product'
