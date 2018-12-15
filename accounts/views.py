@@ -97,6 +97,45 @@ def SubProductComplaint(request):
         plt.title('Complaint count over Registered Sub_products for %s' %(product))
         plt.savefig("Sub_Product_Count.png")
         return JsonResponse(json_values)
+    
+def CompanyDispute(request):
+    filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
+    with open(filename, "r") as csv_file:
+        reader = csv.reader(csv_file)
+        company=[]
+        dispute=[]
+        for row in reader:
+            company.append(row[7])
+            dispute.append(row[16])
+        disputes={}
+        for i in range(len(company)):
+            disputes[company[i]]=0
+        for i in range(len(company)):
+            if(dispute[i]=='Yes'):
+                disputes[company[i]]+=1
+        sorted_disputes=sorted(disputes.values())
+        max_disputes=sorted_disputes[-10:]
+        min_disputes=sorted_disputes[30:50]
+        final_dis={}
+        print(max_disputes)
+        print(min_disputes)
+        for i in disputes:
+            if(disputes[i] in max_disputes and len(final_dis)<20 and disputes[i]!=0 ):
+                final_dis[i]=disputes[i]
+            if(disputes[i] in min_disputes and len(final_dis)<20 and disputes[i]!=0):
+                final_dis[i]=disputes[i]
+
+        json_values = json.loads(json.dumps(final_dis))
+        labels = final_dis.keys()
+        sizes = final_dis.values()
+        # explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+
+        fig1, ax1 = plt.subplots()
+        ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
+                shadow=True, startangle=90)
+        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        plt.savefig("DisComp.png")
+        return JsonResponse(json_values)
 
 #'date_received
 # 'product'
