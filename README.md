@@ -1,4 +1,4 @@
-# Dillinger
+# Acko Dashboard 1.0
 
 [![N|Solid](https://cldup.com/dTxpPi9lDf.thumb.png)](https://nodesource.com/products/nsolid)
 
@@ -35,7 +35,7 @@ Developers involved,
 ```sh
 $ M Rahul Krishnan 
 $ Ram Manoj
-$ Siddhart K 
+$ Siddharth Kumar 
 ```
 
 ### Todos
