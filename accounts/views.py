@@ -97,45 +97,19 @@ def SubProductComplaint(request):
         plt.title('Complaint count over Registered Sub_products for %s' %(product))
         plt.savefig("Sub_Product_Count.png")
         return JsonResponse(json_values)
-    
-def CompanyDispute(request):
+def firstbitthird(response):
+    sub_product='Second mortgage'
     filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
     with open(filename, "r") as csv_file:
         reader = csv.reader(csv_file)
-        company=[]
-        dispute=[]
+        companies={}
         for row in reader:
-            company.append(row[7])
-            dispute.append(row[16])
-        disputes={}
-        for i in range(len(company)):
-            disputes[company[i]]=0
-        for i in range(len(company)):
-            if(dispute[i]=='Yes'):
-                disputes[company[i]]+=1
-        sorted_disputes=sorted(disputes.values())
-        max_disputes=sorted_disputes[-10:]
-        min_disputes=sorted_disputes[30:50]
-        final_dis={}
-        print(max_disputes)
-        print(min_disputes)
-        for i in disputes:
-            if(disputes[i] in max_disputes and len(final_dis)<20 and disputes[i]!=0 ):
-                final_dis[i]=disputes[i]
-            if(disputes[i] in min_disputes and len(final_dis)<20 and disputes[i]!=0):
-                final_dis[i]=disputes[i]
-
-        json_values = json.loads(json.dumps(final_dis))
-        labels = final_dis.keys()
-        sizes = final_dis.values()
-        # explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
-
-        fig1, ax1 = plt.subplots()
-        ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
-                shadow=True, startangle=90)
-        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-        plt.savefig("DisComp.png")
-        return JsonResponse(json_values)
+            if(row[2]==sub_product):
+                if(row[7] in companies):
+                    companies[row[7]]+=1
+                else:
+                    companies[row[7]]=1
+        print(companies)
 def CompanyDispute(request):
     filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
     with open(filename, "r") as csv_file:
@@ -220,8 +194,126 @@ def Demographic(response):
         ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
         plt.savefig("DisComp_prod_comp.png")
         return JsonResponse(json_values)
+def progressive_analysis(response):
+    filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
+    with open(filename, "r") as csv_file:
+        reader = csv.reader(csv_file)
+        date=[]
+        company=[]
+        for row in reader:
+            date.append(row[0])
+            company.append(row[7])
+        it=[]
+        count=0
+        for it1 in date:
+            if(count==0):
+                count+=1
+                continue
+            else:
+                it1 = list(it1)
+                it1 = it1[6:]
+                it1 = "".join(it1)
+                it.append(it1)
+        dates_unique = list(set(it))
+        cmpny_count0={}
+        print(len(it),len(company))
+        for j in range(1,len(company)):
+            if(it[j-1]=='2012'):
+                if(company[j] in cmpny_count0):
+                    cmpny_count0[company[j]]+=1
+                else:
+                    cmpny_count0[company[j]]=1
+        cmpny_count1 = {}
+        for j in range(1,len(company)):
+            if (it[j-1] == '2013'):
+                if (company[j] in cmpny_count1):
+                    cmpny_count1[company[j]] += 1
+                else:
+                    cmpny_count1[company[j]] = 1
+        cmpny_count2 = {}
+        for j in range(1,len(company)):
+            if (it[j-1] == '2014'):
+                if (company[j] in cmpny_count2):
+                    cmpny_count2[company[j]] += 1
+                else:
+                    cmpny_count2[company[j]] = 1
+        cmpny_count3 = {}
+        for j in range(1,len(company)):
+            if (it[j-1] == '2015'):
+                if (company[j] in cmpny_count3):
+                    cmpny_count3[company[j]] += 1
+                else:
+                    cmpny_count3[company[j]] = 1
+        cmpny_count4 = {}
+        for j in range(1,len(company)):
+            if (it[j-1] == '2016'):
+                if (company[j] in cmpny_count4):
+                    cmpny_count4[company[j]] += 1
+                else:
+                    cmpny_count4[company[j]] = 1
+        #printing only significant ones
+        company0=sorted(cmpny_count0.values())
+        company0=company0[-2:]
+        del_me_temp=[]
+        for i in cmpny_count0:
+            if(cmpny_count0[i] in company0):
+                continue
+            else:
+                del_me_temp.append(i)
+        for i in range(len(del_me_temp)):
+            cmpny_count0.pop(i, None)
 
-#'date_received
+        del_me_temp1 = []
+        company1 = sorted(cmpny_count1.values())
+        company1 = company1[-2:]
+        for i in cmpny_count1:
+            if (cmpny_count1[i] in company1):
+                continue
+            else:
+                del_me_temp1.append(i)
+            for i in range(len(del_me_temp1)):
+                cmpny_count1.pop(i, None)
+
+        company2 = sorted(cmpny_count2.values())
+        company2 = company2[-2:]
+        del_me_temp2=[]
+        for i in cmpny_count2:
+            if (cmpny_count2[i] in company2):
+                continue
+            else:
+                del_me_temp2.append(i)
+            for i in range(len(del_me_temp2)):
+                cmpny_count2.pop(i, None)
+
+        company3 = sorted(cmpny_count3.values())
+        company3 = company0[-2:]
+        del_me_temp3=[]
+        for i in cmpny_count3:
+            if (cmpny_count3[i] in company3):
+                continue
+            else:
+                del_me_temp3.append(i)
+            for i in range(len(del_me_temp3)):
+                cmpny_count3.pop(i, None)
+
+
+        company4 = sorted(cmpny_count4.values())
+        company4 = company4[-2:]
+        del_me_temp4=[]
+        for i in cmpny_count4:
+            if (cmpny_count4[i] in company4):
+                continue
+            else:
+                del_me_temp4.append(i)
+            for i in range(len(del_me_temp4)):
+                cmpny_count4.pop(i, None)
+        print(cmpny_count0)
+        print(cmpny_count1)
+        print(cmpny_count2)
+        print(cmpny_count3)
+        print(cmpny_count4)
+
+# #'date_received
 # 'product'
 # 'sub_product'
 # 'issue'
