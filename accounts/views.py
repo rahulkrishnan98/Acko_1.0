@@ -194,7 +194,8 @@ def Demographic(response):
         ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
         plt.savefig("DisComp_prod_comp.png")
         return JsonResponse(json_values)
-def progressive_analysis(response):
+    
+def progressive_analysis(request):
     filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
     with open(filename, "r") as csv_file:
         reader = csv.reader(csv_file)
@@ -203,115 +204,41 @@ def progressive_analysis(response):
         for row in reader:
             date.append(row[0])
             company.append(row[7])
-        it=[]
-        count=0
-        for it1 in date:
-            if(count==0):
-                count+=1
-                continue
-            else:
-                it1 = list(it1)
-                it1 = it1[6:]
-                it1 = "".join(it1)
-                it.append(it1)
-        dates_unique = list(set(it))
-        cmpny_count0={}
-        print(len(it),len(company))
-        for j in range(1,len(company)):
-            if(it[j-1]=='2012'):
-                if(company[j] in cmpny_count0):
-                    cmpny_count0[company[j]]+=1
-                else:
-                    cmpny_count0[company[j]]=1
-        cmpny_count1 = {}
-        for j in range(1,len(company)):
-            if (it[j-1] == '2013'):
-                if (company[j] in cmpny_count1):
-                    cmpny_count1[company[j]] += 1
-                else:
-                    cmpny_count1[company[j]] = 1
-        cmpny_count2 = {}
-        for j in range(1,len(company)):
-            if (it[j-1] == '2014'):
-                if (company[j] in cmpny_count2):
-                    cmpny_count2[company[j]] += 1
-                else:
-                    cmpny_count2[company[j]] = 1
-        cmpny_count3 = {}
-        for j in range(1,len(company)):
-            if (it[j-1] == '2015'):
-                if (company[j] in cmpny_count3):
-                    cmpny_count3[company[j]] += 1
-                else:
-                    cmpny_count3[company[j]] = 1
-        cmpny_count4 = {}
-        for j in range(1,len(company)):
-            if (it[j-1] == '2016'):
-                if (company[j] in cmpny_count4):
-                    cmpny_count4[company[j]] += 1
-                else:
-                    cmpny_count4[company[j]] = 1
-        #printing only significant ones
-        company0=sorted(cmpny_count0.values())
-        company0=company0[-2:]
-        del_me_temp=[]
-        for i in cmpny_count0:
-            if(cmpny_count0[i] in company0):
-                continue
-            else:
-                del_me_temp.append(i)
-        for i in range(len(del_me_temp)):
-            cmpny_count0.pop(i, None)
+        #correct years format from date
+        dates=[]
+        for dates1 in date:
+            dates1=list(dates1)
+            dates1=dates1[6:]
+            dates1="".join(dates1)
+            dates.append(dates1)
+        company2012={}
+        company2013={}
+        company2014={}
+        company2015={}
+        print(len(dates),len(company))
+        for i in range(1,len(company)):
+            if(dates[i]=='2012' and company[i] in company2012):
+                company2012[company[i]]+=1
+            elif(dates[i]=='2012'):
+                company2012[company[i]]=1
 
-        del_me_temp1 = []
-        company1 = sorted(cmpny_count1.values())
-        company1 = company1[-2:]
-        for i in cmpny_count1:
-            if (cmpny_count1[i] in company1):
-                continue
-            else:
-                del_me_temp1.append(i)
-            for i in range(len(del_me_temp1)):
-                cmpny_count1.pop(i, None)
+            if (dates[i] == '2013' and company[i] in company2013):
+                company2013[company[i]] += 1
+            elif (dates[i] == '2013'):
+                company2013[company[i]] = 1
 
-        company2 = sorted(cmpny_count2.values())
-        company2 = company2[-2:]
-        del_me_temp2=[]
-        for i in cmpny_count2:
-            if (cmpny_count2[i] in company2):
-                continue
-            else:
-                del_me_temp2.append(i)
-            for i in range(len(del_me_temp2)):
-                cmpny_count2.pop(i, None)
+            if (dates[i] == '2014' and company[i] in company2014):
+                company2014[company[i]] += 1
+            elif (dates[i] == '2014'):
+                company2014[company[i]] = 1
 
-        company3 = sorted(cmpny_count3.values())
-        company3 = company0[-2:]
-        del_me_temp3=[]
-        for i in cmpny_count3:
-            if (cmpny_count3[i] in company3):
-                continue
-            else:
-                del_me_temp3.append(i)
-            for i in range(len(del_me_temp3)):
-                cmpny_count3.pop(i, None)
-
-
-        company4 = sorted(cmpny_count4.values())
-        company4 = company4[-2:]
-        del_me_temp4=[]
-        for i in cmpny_count4:
-            if (cmpny_count4[i] in company4):
-                continue
-            else:
-                del_me_temp4.append(i)
-            for i in range(len(del_me_temp4)):
-                cmpny_count4.pop(i, None)
-        print(cmpny_count0)
-        print(cmpny_count1)
-        print(cmpny_count2)
-        print(cmpny_count3)
-        print(cmpny_count4)
+            if (dates[i] == '2015' and company[i] in company2015):
+                company2015[company[i]] += 1
+            elif (dates[i] == '2015'):
+                company2015[company[i]] = 1
+        all_years={company2012,company2013,company2014,company2015}
+        json_values = json.loads(json.dumps(all_years))
+        return JsonResponse(json_values)
 
 # #'date_received
 # 'product'
