@@ -1,10 +1,12 @@
 import json
-
+import ast
 from django.contrib.auth import authenticate, login
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
+from rest_framework.decorators import permission_classes, api_view, authentication_classes
 from rest_framework.response import Response
 from knox.views import LoginView, LogoutView
 from rest_framework.permissions import AllowAny
@@ -56,7 +58,8 @@ class UserLogoutView(LogoutView):
     def post(self, request, format=None):
         super(UserLogoutView, self).post(request, format=None)
         return Response({'message': 'successfully logged out!', 'error': 0})
-   
+
+
 def ProductComplaintView(request):
     filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
     with open(filename, "r") as csv_file:
@@ -72,15 +75,13 @@ def ProductComplaintView(request):
                 plot1[product]=1
         json1 = json.dumps(plot1)
         json2 = json.loads(json1)
-        plt.bar(range(len(plot1)), list(plot1.values()), align='center')
-        plt.xticks(range(len(plot1)), list(plot1.keys()),fontsize=7, rotation=30)
-        plt.title('Complaint count over Registered products')
-        plt.savefig("1.Product_Count.png")
         return JsonResponse({'message': json2})
 
 
-def SubProductComplaint(request):
-    product = 'Mortgage'
+@csrf_exempt
+def SubProductComplaint(request, product):
+    product = product.replace("_", " ")
+    print(product)
     filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
     with open(filename, "r") as csv_file:
         reader = csv.reader(csv_file)
@@ -91,76 +92,73 @@ def SubProductComplaint(request):
                     sub_products[row[2]] += 1
                 else:
                     sub_products[row[2]] = 1
+
+        if list(sub_products.keys())[0] == '':
+            return JsonResponse({'message': 'No sub products in it'})
         json_values = json.loads(json.dumps(sub_products))
-        plt.bar(range(len(sub_products)), list(sub_products.values()), align='center')
-        plt.xticks(range(len(sub_products)), list(sub_products.keys()), fontsize=7, rotation=30)
-        plt.title('Complaint count over Registered Sub_products for %s' %(product))
-        plt.savefig("Sub_Product_Count.png")
         return JsonResponse(json_values)
-def firstbitthird(response):
-    sub_product='Second mortgage'
+
+
+@csrf_exempt
+@api_view(['post'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def firstbitthird(request):
+    sub_product = request.POST['sub_product']
+    companies = request.POST['companies']
+    companies = ast.literal_eval(companies)
+    print(companies)
+    returns = {}
     filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
     with open(filename, "r") as csv_file:
         reader = csv.reader(csv_file)
-        companies={}
         for row in reader:
-            if(row[2]==sub_product):
-                if(row[7] in companies):
-                    companies[row[7]]+=1
+            if ((row[2] == sub_product) and (row[7] in companies)):
+                print(row[7])
+                if row[7] in returns.keys():
+                    returns[row[7]] += 1
                 else:
-                    companies[row[7]]=1
-        print(companies)
+                    returns[row[7]] = 1
+
+    return JsonResponse(json.loads(json.dumps(returns)))
+
+
 def CompanyDispute(request):
     filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
     with open(filename, "r") as csv_file:
         reader = csv.reader(csv_file)
-        company=[]
-        dispute=[]
+        company, dispute, final_dis, disputes =[], [], {}, {}
         for row in reader:
             company.append(row[7])
             dispute.append(row[16])
-        disputes={}
         for i in range(len(company)):
             disputes[company[i]]=0
         for i in range(len(company)):
-            if(dispute[i]=='Yes'):
-                disputes[company[i]]+=1
+            if dispute[i] == 'Yes':
+                disputes[company[i]] += 1
         sorted_disputes=sorted(disputes.values())
-        max_disputes=sorted_disputes[-10:]
-        min_disputes=sorted_disputes[30:50]
-        final_dis={}
-        print(max_disputes)
-        print(min_disputes)
+        max_disputes, min_disputes = sorted_disputes[-10:], sorted_disputes[30:50]
         for i in disputes:
-            if(disputes[i] in max_disputes and len(final_dis)<20 and disputes[i]!=0 ):
+            if disputes[i] in max_disputes and len(final_dis)<20 and disputes[i]!=0:
                 final_dis[i]=disputes[i]
-            if(disputes[i] in min_disputes and len(final_dis)<20 and disputes[i]!=0):
+            if disputes[i] in min_disputes and len(final_dis)<20 and disputes[i]!=0:
                 final_dis[i]=disputes[i]
 
-        json_values = json.loads(json.dumps(final_dis))
-        labels = final_dis.keys()
-        sizes = final_dis.values()
-        # explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+        return JsonResponse(json.loads(json.dumps(final_dis)))
 
-        fig1, ax1 = plt.subplots()
-        ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
-                shadow=True, startangle=90)
-        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-        plt.savefig("DisComp.png")
-        return JsonResponse(json_values)
 
-def Demographic(response):
-    company='Capital One'
+@csrf_exempt
+@permission_classes([AllowAny])
+def Demographic(request):
+    company = request.POST['company']
     filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
     with open(filename, "r") as csv_file:
         reader = csv.reader(csv_file)
-        product=[]
-        dispute=[]
+        product, dispute, sum1 = [], [], {}
         for row in reader:
             if(row[7]==company):
                 product.append(row[1])
                 dispute.append(row[16])
-        sum1={}
         for i in range(len(dispute)):
             if(dispute[i]=='Yes'):
                 dispute[i]=0
@@ -172,75 +170,89 @@ def Demographic(response):
             else:
                 sum1[product[i]]=dispute[i]
         sorted1=sorted(sum1.values())
-        print(sorted1)
-        add1=0
-        note=[]
+        add1, note= 0, []
         for i in sum1:
             if(sum1[i]<sorted1[-3]):
                 add1+=sum1[i]
                 note.append(i)
-
         for i in note:
             sum1.pop(i, None)
-        sum1['others']=add1
-        json_values = json.loads(json.dumps(sum1))
-        labels = sum1.keys()
-        sizes = sum1.values()
-        # explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+        sum1['others'] = add1
+    return JsonResponse(json.loads(json.dumps(sum1)))
 
-        fig1, ax1 = plt.subplots()
-        ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
-                shadow=True, startangle=90)
-        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-        plt.savefig("DisComp_prod_comp.png")
-        return JsonResponse(json_values)
-    
-def progressive_analysis(request):
+
+def company_names(request):
     filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
     with open(filename, "r") as csv_file:
         reader = csv.reader(csv_file)
-        date=[]
-        company=[]
+        company = set()
+        lis = {}
         for row in reader:
-            date.append(row[0])
-            company.append(row[7])
-        #correct years format from date
+            sample = '' + row[7] + '::'
+            company.add(sample)
+
+    return HttpResponse(company)
+
+
+@csrf_exempt
+@api_view(['post'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def performance(request):
+    filename = STATIC_ROOT + '/accounts/csv/consumer_complaints.csv'
+    companies = request.POST['company']
+    with open(filename, "r") as csv_file:
+        reader = csv.reader(csv_file)
+        date, company = [], []
+        for row in reader:
+            if row[16] == 'No':
+                date.append(row[0])
+                company.append(row[7])
+        # correct years format from date
         dates=[]
         for dates1 in date:
             dates1=list(dates1)
             dates1=dates1[6:]
             dates1="".join(dates1)
             dates.append(dates1)
-        company2012={}
-        company2013={}
-        company2014={}
-        company2015={}
-        print(len(dates),len(company))
+
+        print(companies)
+        company2012, company2013, company2014, company2015 = {}, {}, {}, {}
         for i in range(1,len(company)):
-            if(dates[i]=='2012' and company[i] in company2012):
-                company2012[company[i]]+=1
-            elif(dates[i]=='2012'):
-                company2012[company[i]]=1
 
-            if (dates[i] == '2013' and company[i] in company2013):
-                company2013[company[i]] += 1
-            elif (dates[i] == '2013'):
-                company2013[company[i]] = 1
+            if dates[i] == '2012' and company[i] == companies:
+                if company[i] in company2012:
+                    company2012[company[i]] += 1
+                else:
+                    company2012[company[i]] = 1
 
-            if (dates[i] == '2014' and company[i] in company2014):
-                company2014[company[i]] += 1
-            elif (dates[i] == '2014'):
-                company2014[company[i]] = 1
+            if dates[i] == '2013' and company[i] == companies:
+                if company[i] in company2013:
+                    company2013[company[i]] += 1
+                else:
+                    company2013[company[i]] = 1
 
-            if (dates[i] == '2015' and company[i] in company2015):
-                company2015[company[i]] += 1
-            elif (dates[i] == '2015'):
-                company2015[company[i]] = 1
-        all_years={company2012,company2013,company2014,company2015}
+            if dates[i] == '2014' and company[i] == companies:
+                if company[i] in company2014:
+                    company2014[company[i]] += 1
+                else:
+                    company2014[company[i]] = 1
+
+            if dates[i] == '2015' and company[i] == companies:
+                if company[i] in company2015:
+                    company2015[company[i]] += 1
+                else:
+                    company2015[company[i]] = 1
+
+        # all_years = {company2012, company2013, company2014, company2015}
+        all_years = {}
+        all_years[companies] =  [company2012[companies], company2013[companies], company2014[companies],
+                               company2015[companies]]
+        print(all_years)
         json_values = json.loads(json.dumps(all_years))
         return JsonResponse(json_values)
 
-# #'date_received
+#'date_received
 # 'product'
 # 'sub_product'
 # 'issue'

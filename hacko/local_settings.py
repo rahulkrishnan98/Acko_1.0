@@ -3,14 +3,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'onlineportal',
-        'USER': 'guest',
-        'PASSWORD': 'guest',
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
-# BROKER_URL = 'amqp://hello:guest@localhost/myvhost'
 DEBUG = True
