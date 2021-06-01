@@ -9,7 +9,7 @@ psycopg2==2.7.3.2
 python-dateutil==2.7.5
 python3-openid==3.1.0
 requests==2.19.1
-urllib3==1.23
+urllib3==1.26.5
 vine==1.1.4
 whitenoise==4.0
 xlrd==1.1.0
